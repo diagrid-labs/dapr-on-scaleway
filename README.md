@@ -4,15 +4,16 @@ This how-to guide combines [two Dapr docs articles](#resources) and explains how
 
 In this guide:
 
-- An Scaleway Kubernetes cluster will be created.
+- A Scaleway Kubernetes cluster will be created.
 - Dapr will be installed on the cluster.
 - Redis will be installed as the state store.
 - Two Dapr applications will be deployed to the cluster.
 
+![Dapr on Scaleway Kubernetes](images/dapr-on-k8s.png)
+
 The NodeJS application has a `neworder` POST endpoint that persists order IDs, and an `order` GET endpoint to retrieve the latest order ID.
 
-The Python application creates the order IDs and calls the `neworder` endpoint of the NodeJS service.
-
+The Python application creates the order IDs and calls the `neworder` endpoint of the NodeJS service in a continuous loop.
 
 ## Prerequisites  
 
@@ -27,10 +28,10 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
 
 ## 1. Create a Scaleway Kubernetes cluster
 
-1. Create a Kubernetes cluser using the Scaleway CLI:
+1. Using the Scaleway CLI create a cluster with two nodes with the smallest node type:
 
     ```bash
-    scw k8s cluster create name=dapr-scaleway
+    scw k8s cluster create name=dapr-scw-k8s pools.0.size=2 pools.0.node-type=PLAY2-NANO pools.0.name=dapr-scw-k8s-pool
     ```
 
     Expected response:
@@ -40,6 +41,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
     Type              kapsule
     Name              dapr-scaleway
     Status            creating
+    Version           1.26.2
     ...
     ```
 
@@ -55,27 +57,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
     Kubeconfig for cluster <CLUSTER_ID> successfully written at / Users/<YOURUSERNAME>/.kube/config
     ```
 
-3. Add a pool with two nodes:
-
-    ```bash
-    scw k8s pool create cluster-id=<CLUSTER_ID> name=daprpool node-type=PLAY2-NANO size=2
-    ```
-
-    Expected response:
-
-    ```bash
-    ID                            <POOL_ID>
-    ClusterID                     <CLUSTER_ID>
-    CreatedAt                     1 second from now
-    UpdatedAt                     1 second from now
-    Name                          daprpool
-    Status                        scaling
-    Version                       1.26.2
-    NodeType                      play2_nano
-    ...
-    ```
-
-4. Verify the connection to the cluster:
+3. Verify the connection to the cluster:
 
     ```bash
     kubectl cluster-info
@@ -84,21 +66,22 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
     Expected response:
 
     ```bash
-    
+    Kubernetes control plane is running at <CONTROL_PLANE_URL>
+    CoreDNS is running at <CONTROL_PLANE_URL>/api/v1/namespaces/kube-system/services/coredns:dns/proxy
     ```
 
-5. Verify the two nodes are deployed:
+4. Verify the two nodes are created:
 
     ```bash
-    kubectl get nodes
+    scw k8s node list cluster-id=<CLUSTER-ID>
     ```
 
      Expected response:
 
     ```bash
-    NAME                                STATUS   ROLES   AGE   VERSION
-    <node1>   Ready    agent   20h   v1.24.9
-    <node2>   Ready    agent   20h   v1.24.9
+    ID          NAME            STATUS    PUBLIC IPV4  PUBLIC IPV6
+    <NODE_ID1>  <NODE_NAME1>    ready     <IP1>        -
+    <NODE_ID2>  <NODE_NAME1>    ready     <IP2>        -
     ```
 
 ## 2. Setup Dapr on Scaleway Kubernetes
@@ -113,6 +96,8 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
 
     ```bash
     Making the jump to hyperspace...
+    Note: To install Dapr using Helm, see here: https://docs.dapr.io/getting-started/install-dapr-kubernetes/#install-with-helm-advanced
+
     Container images will be pulled from Docker Hub
     Deploying the Dapr control plane to your cluster...
     Success! Dapr has been installed to namespace dapr-system. To verify, run `dapr status -k' in your terminal.
@@ -128,11 +113,11 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
 
     ```bash
     NAME                   NAMESPACE    HEALTHY  STATUS   REPLICAS  VERSION  AGE  CREATED
-    dapr-sidecar-injector  dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
-    dapr-sentry            dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
-    dapr-operator          dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
-    dapr-placement-server  dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
     dapr-dashboard         dapr-system  True     Running  1         0.12.0   1m   2023-03-21 11:04.03
+    dapr-operator          dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
+    dapr-sidecar-injector  dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
+    dapr-placement-server  dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
+    dapr-sentry            dapr-system  True     Running  1         1.10.4   1m   2023-03-21 11:04.03
     ```
 
     Ensure that all services are healthy and running before continuing.
@@ -210,7 +195,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
     redis-replicas-2   1/1     Running   0          11m
     ```
 
-5. Ensure you are in the root directory of this repo and run:
+5. Ensure you are in the root directory of this repo and apply the configuration to add the Dapr state store component for Redis:
 
     ```bash
     kubectl apply -f ./resources/redis.yaml
