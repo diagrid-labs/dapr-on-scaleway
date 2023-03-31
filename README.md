@@ -20,6 +20,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
 - [Scaleway account](https://console.scaleway.com/register/)
   - [Scaleway API keys for the CLI](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/)
 - [Scaleway CLI](https://www.scaleway.com/en/cli/)
+  - Initialize the CLI by running `scw init`
 - [Docker](https://docs.docker.com/install/)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [helm](https://github.com/helm/helm#install)
@@ -45,7 +46,20 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
     ...
     ```
 
-2. Install the KubeConfig using the Scaleway CLI:
+2. Check that the cluster is in **ready** state before continuing:
+
+    ```bash
+    scw k8s cluster list
+    ```
+
+    Expected response:
+
+    ```bash
+    ID                NAME             STATUS    VERSION  REGION
+    <CLUSTER_ID>      dapr-scw-k8s     running   1.26.2   nl-ams
+    ```
+
+3. Install the KubeConfig using the Scaleway CLI:
 
     ```bash
     scw k8s kubeconfig install <CLUSTER_ID>
@@ -57,7 +71,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
     Kubeconfig for cluster <CLUSTER_ID> successfully written at / Users/<YOURUSERNAME>/.kube/config
     ```
 
-3. Verify the connection to the cluster:
+4. Verify the connection to the cluster:
 
     ```bash
     kubectl cluster-info
@@ -70,7 +84,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
     CoreDNS is running at <CONTROL_PLANE_URL>/api/v1/namespaces/kube-system/services/coredns:dns/proxy
     ```
 
-4. Verify the two nodes are created:
+5. Verify the two nodes are created:
 
     ```bash
     scw k8s node list cluster-id=<CLUSTER-ID>
