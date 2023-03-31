@@ -345,7 +345,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
 
 Follow these steps to remove all the apps, components and cloud resources created in this how-to guide.
 
-1. Navigate to the resources folder and run this command to delete the services and state resources:
+1. If you only want to remove the Dapr applications and state component, navigate to the `resources` folder and run this command to delete the resources:
 
     ```bash
     kubectl delete -f .
@@ -361,13 +361,42 @@ Follow these steps to remove all the apps, components and cloud resources create
     component.dapr.io "statestore" deleted
     ```
 
-2. Delete the Scaleway cluster:
+2. Delete the entire Scaleway cluster:
+
+    ```bash
+    scw k8s cluster delete <CLUSTER_ID>
+    ```
+
+    Expected response:
+
+    ```bash
+    ID                <CLUSTER_ID>
+    Type              kapsule
+    Name              dapr-scw-k8s
+    Status            deleting
+    Version           1.26.2
+    Region            nl-ams
+    ...
+    ```
+
+3. Use the `cluster list` command to check the status of the cluster:
+
+    ```bash
+    scw k8s cluster list
+    ```
+
+    Expected response:
+
+    ```bash
+    ID              NAME          STATUS    VERSION  REGION
+    <CLUSTER_ID>    dapr-scw-k8s  deleting  1.26.2   nl-ams
+    ```
 
 ## Resources
 
 1. [Creating and managing a Kubernetes Kapsule with CLI](https://www.scaleway.com/en/docs/containers/kubernetes/api-cli/creating-managing-kubernetes-lifecycle-cliv2/)
 2. [Tutorial: Configure state store and pub/sub message broker](https://docs.dapr.io/getting-started/tutorials/configure-state-pubsub/)
-2. [Hello Kubernetes](https://github.com/dapr/quickstarts/tree/master/tutorials/hello-kubernetes)
+3. [Hello Kubernetes](https://github.com/dapr/quickstarts/tree/master/tutorials/hello-kubernetes)
 
 ## More information
 
