@@ -56,7 +56,7 @@ The Python application creates the order IDs and calls the `neworder` endpoint o
 
     ```bash
     ID                NAME             STATUS    VERSION  REGION
-    <CLUSTER_ID>      dapr-scw-k8s     running   1.26.2   nl-ams
+    <CLUSTER_ID>      dapr-scw-k8s     ready     1.26.2   nl-ams
     ```
 
 3. Install the KubeConfig using the Scaleway CLI:
